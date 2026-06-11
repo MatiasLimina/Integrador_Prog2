@@ -3,15 +3,15 @@ package com.integrador.foodstore.domain;
 import java.time.LocalDateTime;
 
 public class Base {
-    private Long id; // Corresponderá al id (PRIMARY KEY AUTO_INCREMENT) de la tabla [cite: 115]
-    private boolean eliminado; // Para el soft delete (baja lógica), mapeado como BIT o TINYINT(1) [cite: 115, 183]
-    private LocalDateTime createdAt; // Mapeado como DATETIME o TIMESTAMP en SQL [cite: 115]
+    private Long id; // Corresponderá al ID (PRIMARY KEY AUTO_INCREMENT) de la tabla
+    private boolean eliminado; // Para el soft delete (baja lógica), mapeado como BIT o TINYINT(1)
+    private LocalDateTime createdAt; // Mapeado como DATETIME o TIMESTAMP en SQL
 
     // Constructor para cuando creamos un objeto nuevo que todavía no se guardó en la DB (el ID lo genera SQL)
     public Base() {
         this.id = null;
-        this.eliminado = false; // Por defecto nace activo [cite: 183]
-        this.createdAt = LocalDateTime.now(); // Fecha y hora del sistema al instanciar [cite: 115]
+        this.eliminado = false; // Por defecto nace activo
+        this.createdAt = LocalDateTime.now(); // Fecha y hora del sistema al instanciar
     }
 
     // Constructor para cuando recuperamos registros existentes desde la Base de Datos (vía el DAO)
