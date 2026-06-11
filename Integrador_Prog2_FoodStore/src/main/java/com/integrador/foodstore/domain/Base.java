@@ -2,7 +2,7 @@ package com.integrador.foodstore.domain;
 
 import java.time.LocalDateTime;
 
-public class Base {
+public abstract class Base {
     private Long id; // Corresponderá al ID (PRIMARY KEY AUTO_INCREMENT) de la tabla
     private boolean eliminado; // Para el soft delete (baja lógica), mapeado como BIT o TINYINT(1)
     private LocalDateTime createdAt; // Mapeado como DATETIME o TIMESTAMP en SQL
