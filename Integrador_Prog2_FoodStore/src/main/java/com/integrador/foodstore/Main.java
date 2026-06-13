@@ -4,6 +4,8 @@ import com.integrador.foodstore.config.DatabaseConnection;
 import com.integrador.foodstore.domain.Usuario;
 import com.integrador.foodstore.enums.Rol;
 import com.integrador.foodstore.exception.CamposVaciosException;
+import com.integrador.foodstore.exception.EmailDuplicadoException;
+import com.integrador.foodstore.exception.UsuarioNoEncontradoException;
 import com.integrador.foodstore.service.UsuarioService;
 
 import java.sql.Connection;
@@ -154,6 +156,8 @@ public class Main {
             System.out.println("❌ " + e.getMessage());
             System.out.println("Por favor, vuelva a intentar completando todos los datos solicitados.");
 
+        } catch (EmailDuplicadoException e) {
+            System.out.println("📧 " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error al crear usuario: " + e.getMessage());
         }
@@ -188,7 +192,10 @@ public class Main {
 
             usuarioService.modificarUsuario(existente);
             System.out.println("¡Usuario actualizado correctamente!");
-        } catch (Exception e) {
+        }catch (UsuarioNoEncontradoException e){
+            System.out.println("❌ " + e.getMessage());
+        }
+        catch (Exception e) {
             System.out.println("Error al editar: " + e.getMessage());
         }
     }
@@ -207,6 +214,8 @@ public class Main {
             } else {
                 System.out.println("Operación cancelada.");
             }
+        } catch (UsuarioNoEncontradoException e){
+            System.out.println("❌ " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error al eliminar: " + e.getMessage());
         }
