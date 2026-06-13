@@ -144,9 +144,19 @@ public class Main {
             System.out.print("Contraseña: ");
             String password = scanner.nextLine();
 
-            System.out.println("Seleccione Rol (1. ADMIN / 2. USUARIO): ");
-            int rolOpc = Integer.parseInt(scanner.nextLine());
-            Rol rol = (rolOpc == 1) ? Rol.ADMIN : Rol.USUARIO;
+            System.out.print("Seleccione Rol (1. ADMIN / 2. USUARIO): ");
+            String rolInput = scanner.nextLine();
+
+            Rol rol = null;
+            if (!rolInput.trim().isEmpty()) {
+                try {
+                    int rolOpc = Integer.parseInt(rolInput);
+                    rol = (rolOpc == 1) ? Rol.ADMIN : Rol.USUARIO;
+                } catch (NumberFormatException e) {
+                    // Si ingresó texto en vez de un número, tiramos CamposVaciosException o lo dejamos pasar
+                    // para que falle controladamente en las validaciones
+                }
+            }
 
             Usuario nuevo = new Usuario(nombre, apellido, email, password, rol);
             usuarioService.registrarUsuario(nuevo);
