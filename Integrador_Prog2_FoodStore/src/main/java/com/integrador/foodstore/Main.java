@@ -3,6 +3,7 @@ package com.integrador.foodstore;
 import com.integrador.foodstore.config.DatabaseConnection;
 import com.integrador.foodstore.domain.Usuario;
 import com.integrador.foodstore.enums.Rol;
+import com.integrador.foodstore.exception.CamposVaciosException;
 import com.integrador.foodstore.service.UsuarioService;
 
 import java.sql.Connection;
@@ -148,6 +149,11 @@ public class Main {
             Usuario nuevo = new Usuario(nombre, apellido, email, password, rol);
             usuarioService.registrarUsuario(nuevo);
             System.out.println("¡Usuario registrado con éxito!");
+        } catch (CamposVaciosException e) {
+            // Captura específica para tu excepción
+            System.out.println("❌ " + e.getMessage());
+            System.out.println("Por favor, vuelva a intentar completando todos los datos solicitados.");
+
         } catch (Exception e) {
             System.out.println("Error al crear usuario: " + e.getMessage());
         }

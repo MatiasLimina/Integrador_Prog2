@@ -3,6 +3,7 @@ package com.integrador.foodstore.service;
 import com.integrador.foodstore.dao.UsuarioDAO;
 import com.integrador.foodstore.dao.impl.UsuarioDAOImpl;
 import com.integrador.foodstore.domain.Usuario;
+import com.integrador.foodstore.exception.CamposVaciosException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -14,7 +15,7 @@ public class UsuarioService {
                 u.getApellido() == null || u.getApellido().trim().isEmpty() ||
                 u.getEmail() == null || u.getEmail().trim().isEmpty() ||
                 u.getPassword() == null || u.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Todos los campos del usuario son obligatorios.");
+            throw new CamposVaciosException("Error de validación: Ninguno de los campos del formulario puede quedar vacío.");
         }
     }
     public void registrarUsuario(Usuario u) throws Exception {
