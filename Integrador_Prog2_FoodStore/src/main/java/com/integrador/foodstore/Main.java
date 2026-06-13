@@ -31,6 +31,7 @@ public class Main {
         /*
         ---- FIN DE PRUEBAS ----
          */
+    // ------------------------------------------------------------------------------------
 
         int opcion;
         do {
@@ -46,16 +47,19 @@ public class Main {
                 opcion = Integer.parseInt(scanner.nextLine());
                 switch (opcion) {
                     case 1:
-                        System.out.println("Módulo de Categorías (A cargo de tu compañero)");
+                        // TO DO
+                        System.out.println("Módulo de Categorías");
                         break;
                     case 2:
-                        System.out.println("Módulo de Productos (A cargo de tu compañero)");
+                        // TO DO
+                        System.out.println("Módulo de Productos ");
                         break;
                     case 3:
                         menuUsuarios(); // Tu módulo
                         break;
                     case 4:
-                        System.out.println("Módulo de Pedidos (A cargo de tu compañero)");
+                        // TO DO
+                        System.out.println("Módulo de Pedidos ");
                         break;
                     case 0:
                         System.out.println("Saliendo del sistema... ¡Hasta luego!");
