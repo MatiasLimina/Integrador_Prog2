@@ -4,6 +4,7 @@ import com.integrador.foodstore.dao.UsuarioDAO;
 import com.integrador.foodstore.dao.impl.UsuarioDAOImpl;
 import com.integrador.foodstore.domain.Usuario;
 import com.integrador.foodstore.exception.CamposVaciosException;
+import com.integrador.foodstore.exception.EmailDuplicadoException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -23,7 +24,7 @@ public class UsuarioService {
 
         // Regla de negocio: El email debe ser único (HU-USR-02)
         if (dao.buscarPorEmail(u.getEmail()) != null) {
-            throw new IllegalArgumentException("El email ya se encuentra registrado por otro usuario.");
+            throw new EmailDuplicadoException("El correo electrónico '" + u.getEmail() + "' ya está asociado a otra cuenta.");
         }
 
         dao.guardar(u);
