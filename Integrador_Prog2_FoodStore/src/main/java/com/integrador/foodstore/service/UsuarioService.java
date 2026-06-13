@@ -16,7 +16,8 @@ public class UsuarioService {
         if (u.getNombre() == null || u.getNombre().trim().isEmpty() ||
                 u.getApellido() == null || u.getApellido().trim().isEmpty() ||
                 u.getEmail() == null || u.getEmail().trim().isEmpty() ||
-                u.getPassword() == null || u.getPassword().trim().isEmpty()) {
+                u.getPassword() == null || u.getPassword().trim().isEmpty() ||
+                u.getRol() == null){
             throw new CamposVaciosException("Error de validación: Ninguno de los campos del formulario puede quedar vacío.");
         }
     }
