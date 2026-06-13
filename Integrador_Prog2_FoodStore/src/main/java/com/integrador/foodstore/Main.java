@@ -55,7 +55,7 @@ public class Main {
                         System.out.println("Módulo de Productos ");
                         break;
                     case 3:
-                        menuUsuarios(); // Tu módulo
+                        menuUsuarios();
                         break;
                     case 4:
                         // TO DO
