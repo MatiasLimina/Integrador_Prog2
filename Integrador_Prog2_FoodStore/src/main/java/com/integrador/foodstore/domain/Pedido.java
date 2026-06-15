@@ -2,18 +2,21 @@ package com.integrador.foodstore.domain;
 
 import com.integrador.foodstore.enums.Estado;
 import com.integrador.foodstore.enums.FormaPago;
+import com.integrador.foodstore.interfaces.Calculable;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public class Pedido extends Base{
+public class Pedido extends Base implements Calculable {
     private Usuario usuario;
-    private Estado estado; // Enum: PENDIENTE, PREPARACION, ENVIADO, ENTREGADO, CANCELADO
-    private FormaPago formaPago; // Enum: EFECTIVO, TARJETA, TRANSFERENCIA
+    private Estado estado;
+    private FormaPago formaPago;
     private Double total;
-    private List<DetallePedido> detalles; // Relación 1:N con sus renglones
+    private List<DetallePedido> detalles;
 
+    // Constructor vacío
     public Pedido() {
         super();
         this.detalles = new ArrayList<>();
@@ -28,8 +31,9 @@ public class Pedido extends Base{
         this.formaPago = formaPago;
     }
 
-    // Constructor completo para el DAO
-    public Pedido(Long id, boolean eliminado, LocalDateTime createdAt, Usuario usuario, Estado estado, FormaPago formaPago, Double total) {
+    // Constructor completo para DAO
+    public Pedido(Long id, boolean eliminado, LocalDateTime createdAt,
+                  Usuario usuario, Estado estado, FormaPago formaPago, Double total) {
         super(id, eliminado, createdAt);
         this.usuario = usuario;
         this.estado = estado;
@@ -38,16 +42,48 @@ public class Pedido extends Base{
         this.detalles = new ArrayList<>();
     }
 
-    // MÉTODO OBLIGATORIO SEGÚN LA CONSIGNA: Agrega un detalle y acumula el total
+    // --- Métodos obligatorios según consigna ---
     public void addDetallePedido(DetallePedido detalle) {
+        if (detalle == null || detalle.getCantidad() <= 0 || detalle.getProducto() == null) {
+            throw new IllegalArgumentException("Detalle inválido: producto nulo o cantidad <= 0");
+        }
         this.detalles.add(detalle);
-        // Al agregar, vinculamos bidireccionalmente el detalle con este pedido
-        detalle.setPedido(this);
-        // Sumamos el subtotal del detalle al total general del pedido
-        this.total += detalle.getSubtotal();
+        detalle.setPedido(this); // vinculación bidireccional
+        calcularTotal(); // recalcular total usando la interfaz
     }
 
-    // Getters y Setters
+    public DetallePedido findDetallePedidoByProducto(Producto producto) {
+        for (DetallePedido d : detalles) {
+            if (d.getProducto().equals(producto) && !d.isEliminado()) {
+                return d;
+            }
+        }
+        return null;
+    }
+
+    public void deleteDetallePedidoByProducto(Producto producto) {
+        Iterator<DetallePedido> it = detalles.iterator();
+        while (it.hasNext()) {
+            DetallePedido d = it.next();
+            if (d.getProducto().equals(producto)) {
+                d.eliminar(); // soft delete
+            }
+        }
+        calcularTotal(); // recalcular total después de eliminar
+    }
+
+    // Implementación de la interfaz Calculable
+    @Override
+    public void calcularTotal() {
+        this.total = 0.0;
+        for (DetallePedido d : detalles) {
+            if (!d.isEliminado()) {
+                this.total += d.getSubtotal();
+            }
+        }
+    }
+
+    // --- Getters y Setters ---
     public Usuario getUsuario() { return usuario; }
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 
@@ -63,8 +99,20 @@ public class Pedido extends Base{
     public List<DetallePedido> getDetalles() { return detalles; }
     public void setDetalles(List<DetallePedido> detalles) { this.detalles = detalles; }
 
+    // Soft delete del pedido
+    public void eliminar() {
+        this.setEliminado(true);
+        for (DetallePedido d : detalles) {
+            d.eliminar();
+        }
+    }
+
     @Override
     public String toString() {
-        return "Pedido [ID: " + getId() + " | Cliente: " + usuario.getApellido() + " | Estado: " + estado + " | Total: $" + total + "]";
+        return "Pedido [ID: " + getId() +
+                " | Cliente: " + usuario.getApellido() +
+                " | Estado: " + estado +
+                " | Forma de Pago: " + formaPago +
+                " | Total: $" + total + "]";
     }
 }
