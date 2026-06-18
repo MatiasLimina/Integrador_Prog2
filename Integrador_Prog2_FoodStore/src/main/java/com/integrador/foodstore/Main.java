@@ -50,18 +50,18 @@ public class Main {
                 opcion = Integer.parseInt(scanner.nextLine());
                 switch (opcion) {
                     case 1:
-                        // TO DO
+                        // TODO
                         System.out.println("Módulo de Categorías");
                         break;
                     case 2:
-                        // TO DO
+                        // TODO
                         System.out.println("Módulo de Productos ");
                         break;
                     case 3:
                         menuUsuarios();
                         break;
                     case 4:
-                        // TO DO
+                        // TODO
                         System.out.println("Módulo de Pedidos ");
                         break;
                     case 0:
