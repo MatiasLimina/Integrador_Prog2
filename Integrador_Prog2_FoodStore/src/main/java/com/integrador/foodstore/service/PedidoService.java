@@ -5,6 +5,7 @@ import com.integrador.foodstore.dao.impl.PedidoDAOImpl;
 import com.integrador.foodstore.domain.Pedido;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PedidoService {
@@ -21,8 +22,8 @@ public class PedidoService {
         }
     }
 
-    // Listar todos los pedidos activos
-    public void listarPedidos() {
+    // Listar pedidos existentes
+    public List<Pedido> listarPedidos() {
         try {
             List<Pedido> pedidos = pedidoDAO.listar();
             if (pedidos.isEmpty()) {
@@ -32,10 +33,13 @@ public class PedidoService {
                     System.out.println(p);
                 }
             }
+            return pedidos;
         } catch (SQLException e) {
             System.err.println("❌ Error al listar pedidos: " + e.getMessage());
+            return new ArrayList<>();
         }
     }
+
 
     // Buscar un pedido por ID
     public Pedido buscarPedidoPorId(Long id) {

@@ -16,7 +16,7 @@ public class DetallePedidoDAOImpl implements DetallePedidoDAO {
     public void guardar(DetallePedido d, Long pedidoId) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO detalle_pedido (pedido_id, producto_id, cantidad, subtotal, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+                     "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, subtotal, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)"
              )) {
             ps.setLong(1, pedidoId);
             ps.setLong(2, d.getProducto().getId());
@@ -35,7 +35,7 @@ public class DetallePedidoDAOImpl implements DetallePedidoDAO {
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM detalle_pedido WHERE pedido_id = ? AND eliminado = false"
+                     "SELECT * FROM detalles_pedido WHERE pedido_id = ? AND eliminado = false"
              )) {
             ps.setLong(1, pedidoId);
 
@@ -62,7 +62,7 @@ public class DetallePedidoDAOImpl implements DetallePedidoDAO {
     public void eliminarPorProducto(Long pedidoId, Long productoId) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "UPDATE detalle_pedido SET eliminado = true WHERE pedido_id = ? AND producto_id = ?"
+                     "UPDATE detalles_pedido SET eliminado = true WHERE pedido_id = ? AND producto_id = ?"
              )) {
             ps.setLong(1, pedidoId);
             ps.setLong(2, productoId);
