@@ -1,11 +1,15 @@
 package com.integrador.foodstore;
 
 import com.integrador.foodstore.config.DatabaseConnection;
+import com.integrador.foodstore.domain.Pedido;
 import com.integrador.foodstore.domain.Usuario;
+import com.integrador.foodstore.enums.Estado;
+import com.integrador.foodstore.enums.FormaPago;
 import com.integrador.foodstore.enums.Rol;
 import com.integrador.foodstore.exception.CamposVaciosException;
 import com.integrador.foodstore.exception.EmailDuplicadoException;
 import com.integrador.foodstore.exception.UsuarioNoEncontradoException;
+import com.integrador.foodstore.service.PedidoService;
 import com.integrador.foodstore.service.UsuarioService;
 
 import java.sql.Connection;
@@ -15,6 +19,8 @@ import java.util.Scanner;
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final UsuarioService usuarioService = new UsuarioService();
+    private static PedidoService pedidoService = new PedidoService();
+
     public static void main(String[] args) {
         /*
         ---- PRUEBAS ----
@@ -61,8 +67,7 @@ public class Main {
                         menuUsuarios();
                         break;
                     case 4:
-                        // TODO
-                        System.out.println("Módulo de Pedidos ");
+                        menuPedidos();
                         break;
                     case 0:
                         System.out.println("Saliendo del sistema... ¡Hasta luego!");
@@ -230,5 +235,137 @@ public class Main {
             System.out.println("Error al eliminar: " + e.getMessage());
         }
     }
+
+    private static void menuPedidos() {
+        int opcion;
+        do {
+            System.out.println("\n--- GESTIÓN DE PEDIDOS ---");
+            System.out.println("1. Listar Pedidos");
+            System.out.println("2. Crear Pedido");
+            System.out.println("3. Editar Pedido");
+            System.out.println("4. Eliminar Pedido");
+            System.out.println("0. Volver al menú principal");
+            System.out.print("Seleccione: ");
+
+            try {
+                opcion = Integer.parseInt(scanner.nextLine());
+                switch (opcion) {
+                    case 1:
+                        ejecutarListarPedidos();
+                        break;
+                    case 2:
+                        ejecutarCrearPedido();
+                        break;
+                    case 3:
+                        ejecutarEditarPedido();
+                        break;
+                    case 4:
+                        ejecutarEliminarPedido();
+                        break;
+                    case 0:
+                        System.out.println("Regresando...");
+                        break;
+                    default:
+                        System.out.println("Opción inválida.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Ingrese una opción numérica.");
+                opcion = -1;
+            }
+        } while (opcion != 0);
+    }
+
+    private static void ejecutarListarPedidos() {
+        try {
+            List<Pedido> lista = pedidoService.listarPedidos();
+            if (lista.isEmpty()) {
+                System.out.println("No hay pedidos cargados en el sistema.");
+            } else {
+                System.out.println("\nListado de Pedidos:");
+                for (Pedido p : lista) {
+                    System.out.println(p);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error al listar: " + e.getMessage());
+        }
+    }
+
+    private static void ejecutarCrearPedido() {
+        try {
+            System.out.println("\n=== Crear Nuevo Pedido ===");
+            System.out.print("ID Usuario: ");
+            Long usuarioId = Long.parseLong(scanner.nextLine());
+
+            Usuario usuario = usuarioService.buscarUsuario(usuarioId);
+            if (usuario == null) {
+                System.out.println("Usuario no encontrado.");
+                return;
+            }
+
+            System.out.print("Forma de pago (EFECTIVO/TARJETA): ");
+            String formaPagoInput = scanner.nextLine();
+            FormaPago formaPago = FormaPago.valueOf(formaPagoInput.toUpperCase());
+
+            Pedido nuevo = new Pedido(usuario, Estado.PENDIENTE, formaPago);
+            pedidoService.crearPedido(nuevo);
+
+            System.out.println("¡Pedido creado con éxito!");
+        } catch (Exception e) {
+            System.out.println("Error al crear pedido: " + e.getMessage());
+        }
+    }
+
+    private static void ejecutarEditarPedido() {
+        try {
+            System.out.print("\nIngrese el ID del pedido a modificar: ");
+            Long id = Long.parseLong(scanner.nextLine());
+
+            Pedido existente = pedidoService.buscarPedidoPorId(id);
+            if (existente == null) {
+                System.out.println("El pedido no existe o está dado de baja.");
+                return;
+            }
+
+            System.out.print("Nuevo Estado (" + existente.getEstado() + "): ");
+            String estadoInput = scanner.nextLine();
+            if (!estadoInput.trim().isEmpty()) {
+                existente.setEstado(Estado.valueOf(estadoInput.toUpperCase()));
+            }
+
+            System.out.print("Nueva Forma de Pago (" + existente.getFormaPago() + "): ");
+            String formaPagoInput = scanner.nextLine();
+            if (!formaPagoInput.trim().isEmpty()) {
+                existente.setFormaPago(FormaPago.valueOf(formaPagoInput.toUpperCase()));
+            }
+
+            pedidoService.actualizarPedido(existente);
+            System.out.println("¡Pedido actualizado correctamente!");
+        } catch (Exception e) {
+            System.out.println("Error al editar: " + e.getMessage());
+        }
+    }
+
+    private static void ejecutarEliminarPedido() {
+        try {
+            System.out.print("\nIngrese el ID del pedido a eliminar (Baja Lógica): ");
+            Long id = Long.parseLong(scanner.nextLine());
+
+            System.out.print("¿Está seguro de que desea eliminar este pedido? (S/N): ");
+            String confirmacion = scanner.nextLine();
+
+            if (confirmacion.equalsIgnoreCase("S")) {
+                pedidoService.eliminarPedido(id);
+                System.out.println("¡Pedido eliminado lógicamente del sistema!");
+            } else {
+                System.out.println("Operación cancelada.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error al eliminar: " + e.getMessage());
+        }
+    }
+
+
+
 
 }

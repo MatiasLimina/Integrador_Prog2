@@ -36,6 +36,17 @@ public class Usuario extends Base{
         this.rol = rol;
     }
 
+    // Constructor simplificado para mapear datos desde la tabla pedidos (JOIN con usuarios)
+// Se usa en PedidoDAOImpl.listar() y buscarPorId()
+    public Usuario(Long id, String nombre, String apellido, String email) {
+        super(); // inicializa Base sin datos
+        this.setId(id);
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.email = email;
+    }
+
+
     // Getters y Setters
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
