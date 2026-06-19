@@ -25,15 +25,7 @@ public class PedidoService {
     // Listar pedidos existentes
     public List<Pedido> listarPedidos() {
         try {
-            List<Pedido> pedidos = pedidoDAO.listar();
-            if (pedidos.isEmpty()) {
-                System.out.println("No hay pedidos registrados.");
-            } else {
-                for (Pedido p : pedidos) {
-                    System.out.println(p);
-                }
-            }
-            return pedidos;
+            return pedidoDAO.listar();
         } catch (SQLException e) {
             System.err.println("❌ Error al listar pedidos: " + e.getMessage());
             return new ArrayList<>();
