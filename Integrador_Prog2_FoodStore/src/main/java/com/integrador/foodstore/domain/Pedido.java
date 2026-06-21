@@ -52,6 +52,12 @@ public class Pedido extends Base implements Calculable {
         calcularTotal(); // recalcular total usando la interfaz
     }
 
+    public void addDetallePedido(int cantidad, Double subtotal, Producto producto) {
+        DetallePedido detalle = new DetallePedido(producto, cantidad);
+        detalle.setSubtotal(subtotal);
+        addDetallePedido(detalle);
+    }
+
     public DetallePedido findDetallePedidoByProducto(Producto producto) {
         for (DetallePedido d : detalles) {
             if (d.getProducto().equals(producto) && !d.isEliminado()) {

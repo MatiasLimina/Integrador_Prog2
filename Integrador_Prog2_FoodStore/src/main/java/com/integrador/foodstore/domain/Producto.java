@@ -17,9 +17,9 @@ public class Producto extends Base {
     public Producto(String nombre, Double precio, String descripcion, int stock, String imagen, Boolean disponible, Categoria categoria) {
         super();
         this.nombre = nombre;
-        this.precio = precio;
+        setPrecio(precio);
         this.descripcion = descripcion;
-        this.stock = stock;
+        setStock(stock);
         this.imagen = imagen; // Se mapea directo al atributo disponible
         this.disponible = disponible;
         this.categoria = categoria;
@@ -30,9 +30,9 @@ public class Producto extends Base {
                     String descripcion, int stock, String imagen, Boolean disponible, Categoria categoria) {
         super(id, eliminado, createdAt);
         this.nombre = nombre;
-        this.precio = precio;
+        setPrecio(precio);
         this.descripcion = descripcion;
-        this.stock = stock;
+        setStock(stock);
         this.imagen = imagen;
         this.disponible = disponible;
         this.categoria = categoria;
@@ -43,13 +43,23 @@ public class Producto extends Base {
     public void setNombre(String nombre) { this.nombre = nombre; }
 
     public Double getPrecio() { return precio; }
-    public void setPrecio(Double precio) { this.precio = precio; }
+    public void setPrecio(Double precio) {
+        if (precio != null && precio < 0) {
+            throw new IllegalArgumentException("El precio del producto no puede ser negativo.");
+        }
+        this.precio = precio;
+    }
 
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
     public int getStock() { return stock; }
-    public void setStock(int stock) { this.stock = stock; }
+    public void setStock(int stock) {
+        if (stock < 0) {
+            throw new IllegalArgumentException("El stock del producto no puede ser negativo.");
+        }
+        this.stock = stock;
+    }
 
     public String getImagen() { return imagen; }
     public void setImagen(String imagen ) { this.imagen = imagen; }

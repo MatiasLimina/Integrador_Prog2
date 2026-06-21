@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS food_store_tpi;
 USE food_store_tpi;
 
--- Ejemplo de cómo impacta tu clase Base en la tabla Categorias
+
 CREATE TABLE IF NOT EXISTS categorias (
     -- Atributos de la clase Base:
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS categorias (
     descripcion VARCHAR(255)
 );
 
--- Ejemplo de cómo impacta tu clase Base en la tabla Productos
+
 CREATE TABLE IF NOT EXISTS productos (
     -- Atributos de la clase Base:
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

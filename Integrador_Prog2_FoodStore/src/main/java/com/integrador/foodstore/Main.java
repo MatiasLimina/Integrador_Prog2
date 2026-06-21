@@ -18,23 +18,18 @@ import com.integrador.foodstore.service.ProductoService;
 import com.integrador.foodstore.service.UsuarioService;
 
 import java.sql.Connection;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final UsuarioService usuarioService = new UsuarioService();
-    private static PedidoService pedidoService = new PedidoService();
+    private static final PedidoService pedidoService = new PedidoService();
     private static final CategoriaService categoriaService = new CategoriaService();
     private static final ProductoService productoService = new ProductoService();
 
     public static void main(String[] args) {
-        /*
-        ---- PRUEBAS ----
-         */
         System.out.println("=== Probando conexión a la Base de Datos ===");
-
         try (Connection con = DatabaseConnection.getConnection()) {
             if (con != null && !con.isClosed()) {
                 System.out.println("¡Conexión exitosa a MySQL usando HikariCP!");
@@ -44,11 +39,6 @@ public class Main {
             System.err.println("ERROR al conectar a la base de datos:");
             e.printStackTrace();
         }
-
-        /*
-        ---- FIN DE PRUEBAS ----
-         */
-    // ------------------------------------------------------------------------------------
 
         int opcion;
         do {
@@ -88,7 +78,6 @@ public class Main {
         } while (opcion != 0);
     }
 
-    // --- MÉTODOS PARA GESTIÓN DE CATEGORÍAS ---
     private static void menuCategorias() {
         int opcion;
         do {
@@ -154,7 +143,7 @@ public class Main {
 
             Categoria nueva = new Categoria(nombre, descripcion);
             categoriaService.guardarCategoria(nueva);
-            System.out.println("✅ Categoría '" + nueva.getNombre() + "' registrada con éxito con ID: " + nueva.getId());
+            System.out.println("✅ Categoría '" + nueva.getNombre() + "' registrada con éxito.");
         } catch (ServiceException e) {
             System.out.println("❌ Error al crear categoría: " + e.getMessage());
         }
@@ -210,7 +199,6 @@ public class Main {
         }
     }
 
-    // --- MÉTODOS PARA GESTIÓN DE PRODUCTOS ---
     private static void menuProductos() {
         int opcion;
         do {
@@ -274,10 +262,9 @@ public class Main {
         try {
             System.out.println("\n=== Crear Nuevo Producto ===");
 
-            // Listar categorías para que el usuario pueda elegir
             List<Categoria> categorias = categoriaService.listarCategorias();
             if (categorias.isEmpty()) {
-                System.out.println("❌ No hay categorías disponibles para asociar productos. Cree una categoría primero.");
+                System.out.println("❌ No hay categorías disponibles. Cree una categoría primero.");
                 return;
             }
             System.out.println("\nCategorías disponibles:");
@@ -302,16 +289,16 @@ public class Main {
 
             Categoria categoriaAsociada = categoriaService.buscarCategoriaPorId(categoriaId);
             if (categoriaAsociada == null) {
-                System.out.println("❌ Categoría con ID " + categoriaId + " no encontrada o eliminada.");
+                System.out.println("❌ Categoría con ID " + categoriaId + " no encontrada.");
                 return;
             }
 
             Producto nuevo = new Producto(nombre, precio, descripcion, stock, imagen, disponible, categoriaAsociada);
             productoService.guardarProducto(nuevo);
-            System.out.println("✅ Producto '" + nuevo.getNombre() + "' registrado con éxito con ID: " + nuevo.getId());
+            System.out.println("✅ Producto '" + nuevo.getNombre() + "' registrado con éxito.");
         } catch (NumberFormatException e) {
-            System.out.println("❌ Error de formato: Asegúrese de ingresar números válidos para Precio, Stock e ID de Categoría.");
-        } catch (ServiceException e) {
+            System.out.println("❌ Error de formato: Ingrese números válidos para Precio, Stock e ID.");
+        } catch (IllegalArgumentException | ServiceException e) {
             System.out.println("❌ Error al crear producto: " + e.getMessage());
         }
     }
@@ -323,7 +310,7 @@ public class Main {
 
             Producto existente = productoService.buscarProductoPorId(id);
             if (existente == null) {
-                System.out.println("❌ El producto con ID " + id + " no existe o está eliminado.");
+                System.out.println("❌ El producto con ID " + id + " no existe.");
                 return;
             }
 
@@ -352,7 +339,6 @@ public class Main {
             String disponibleStr = scanner.nextLine();
             if (!disponibleStr.trim().isEmpty()) existente.setDisponible(Boolean.parseBoolean(disponibleStr));
 
-            // Listar categorías para que el usuario pueda elegir una nueva
             List<Categoria> categorias = categoriaService.listarCategorias();
             if (!categorias.isEmpty()) {
                 System.out.println("\nCategorías disponibles:");
@@ -365,18 +351,18 @@ public class Main {
             if (!categoriaIdStr.trim().isEmpty()) {
                 Long nuevaCategoriaId = Long.parseLong(categoriaIdStr);
                 Categoria nuevaCategoria = categoriaService.buscarCategoriaPorId(nuevaCategoriaId);
-                if (nuevaCategoria == null) {
-                    System.out.println("❌ Categoría con ID " + nuevaCategoriaId + " no encontrada o eliminada. Se mantendrá la categoría actual.");
-                } else {
+                if (nuevaCategoria != null) {
                     existente.setCategoria(nuevaCategoria);
+                } else {
+                    System.out.println("❌ Categoría no encontrada. Se mantiene la actual.");
                 }
             }
 
             productoService.actualizarProducto(existente);
             System.out.println("✅ Producto actualizado correctamente!");
         } catch (NumberFormatException e) {
-            System.out.println("❌ Error de formato: Asegúrese de ingresar números válidos para ID, Precio, Stock e ID de Categoría.");
-        } catch (ServiceException e) {
+            System.out.println("❌ Error de formato: Ingrese números válidos.");
+        } catch (IllegalArgumentException | ServiceException e) {
             System.out.println("❌ Error al editar producto: " + e.getMessage());
         }
     }
@@ -386,12 +372,12 @@ public class Main {
             System.out.print("\nIngrese el ID del producto a eliminar (Baja Lógica): ");
             Long id = Long.parseLong(scanner.nextLine());
 
-            System.out.print("¿Está seguro de que desea eliminar lógicamente este producto? (S/N): ");
+            System.out.print("¿Está seguro de que desea eliminar este producto? (S/N): ");
             String confirmacion = scanner.nextLine();
 
             if (confirmacion.equalsIgnoreCase("S")) {
                 productoService.eliminarProducto(id);
-                System.out.println("✅ Producto eliminado lógicamente del sistema!");
+                System.out.println("✅ Producto eliminado lógicamente!");
             } else {
                 System.out.println("Operación cancelada.");
             }
@@ -404,10 +390,9 @@ public class Main {
 
     private static void ejecutarListarProductosPorCategoria() {
         try {
-            // Listar categorías para que el usuario pueda elegir
             List<Categoria> categorias = categoriaService.listarCategorias();
             if (categorias.isEmpty()) {
-                System.out.println("❌ No hay categorías disponibles para filtrar productos.");
+                System.out.println("❌ No hay categorías disponibles.");
                 return;
             }
             System.out.println("\nCategorías disponibles:");
@@ -420,7 +405,7 @@ public class Main {
 
             List<Producto> lista = productoService.listarProductosPorCategoria(categoriaId);
             if (lista.isEmpty()) {
-                System.out.println("No hay productos cargados en la categoría con ID " + categoriaId + ".");
+                System.out.println("No hay productos en la categoría con ID " + categoriaId + ".");
             } else {
                 System.out.println("\nListado de Productos para Categoría ID " + categoriaId + ":");
                 for (Producto p : lista) {
@@ -428,13 +413,12 @@ public class Main {
                 }
             }
         } catch (NumberFormatException e) {
-            System.out.println("❌ Error: Ingrese un ID de categoría numérico válido.");
+            System.out.println("❌ Error: Ingrese un ID de categoría válido.");
         } catch (ServiceException e) {
-            System.out.println("❌ Error al listar productos por categoría: " + e.getMessage());
+            System.out.println("❌ Error al listar productos: " + e.getMessage());
         }
     }
 
-    // --- MÉTODOS PARA GESTIÓN DE USUARIOS (EXISTENTES) ---
     private static void menuUsuarios() {
         int opcion;
         do {
@@ -478,7 +462,7 @@ public class Main {
         try {
             List<Usuario> lista = usuarioService.listarUsuarios();
             if (lista.isEmpty()) {
-                System.out.println("No hay usuarios activos cargados en el sistema."); // HU-USR-01
+                System.out.println("No hay usuarios activos cargados.");
             } else {
                 System.out.println("\nListado de Usuarios:");
                 for (Usuario u : lista) {
@@ -506,26 +490,13 @@ public class Main {
 
             System.out.print("Seleccione Rol (1. ADMIN / 2. USUARIO): ");
             String rolInput = scanner.nextLine();
-
-            Rol rol = null;
-            if (!rolInput.trim().isEmpty()) {
-                try {
-                    int rolOpc = Integer.parseInt(rolInput);
-                    rol = (rolOpc == 1) ? Rol.ADMIN : Rol.USUARIO;
-                } catch (NumberFormatException e) {
-                    // Si ingresó texto en vez de un número, tiramos CamposVaciosException o lo dejamos pasar
-                    // para que falle controladamente en las validaciones
-                }
-            }
+            Rol rol = (Integer.parseInt(rolInput) == 1) ? Rol.ADMIN : Rol.USUARIO;
 
             Usuario nuevo = new Usuario(nombre, apellido, email, celular, password, rol);
             usuarioService.registrarUsuario(nuevo);
             System.out.println("¡Usuario registrado con éxito!");
-        } catch (CamposVaciosException e) {
+        } catch (CamposVaciosException | EmailDuplicadoException e) {
             System.out.println("❌ " + e.getMessage());
-            System.out.println("Por favor, vuelva a intentar completando todos los datos solicitados.");
-        } catch (EmailDuplicadoException e) {
-            System.out.println("📧 " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error al crear usuario: " + e.getMessage());
         }
@@ -538,7 +509,7 @@ public class Main {
 
             Usuario existente = usuarioService.buscarUsuario(id);
             if (existente == null) {
-                System.out.println("El usuario no existe o está dado de baja."); // HU-USR-03
+                System.out.println("El usuario no existe o está dado de baja.");
                 return;
             }
 
@@ -564,10 +535,9 @@ public class Main {
 
             usuarioService.modificarUsuario(existente);
             System.out.println("¡Usuario actualizado correctamente!");
-        }catch (UsuarioNoEncontradoException e){
+        } catch (UsuarioNoEncontradoException | EmailDuplicadoException e) {
             System.out.println("❌ " + e.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Error al editar: " + e.getMessage());
         }
     }
@@ -577,23 +547,22 @@ public class Main {
             System.out.print("\nIngrese el ID del usuario a eliminar (Baja Lógica): ");
             Long id = Long.parseLong(scanner.nextLine());
 
-            System.out.print("¿Está seguro de que desea eliminar este usuario? (S/N): "); // HU-USR-04
+            System.out.print("¿Está seguro de que desea eliminar este usuario? (S/N): ");
             String confirmacion = scanner.nextLine();
 
             if (confirmacion.equalsIgnoreCase("S")) {
                 usuarioService.eliminarUsuario(id);
-                System.out.println("¡Usuario eliminado lógicamente del catálogo!");
+                System.out.println("¡Usuario eliminado lógicamente!");
             } else {
                 System.out.println("Operación cancelada.");
             }
-        } catch (UsuarioNoEncontradoException e){
+        } catch (UsuarioNoEncontradoException e) {
             System.out.println("❌ " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error al eliminar: " + e.getMessage());
         }
     }
 
-    // --- MÉTODOS PARA GESTIÓN DE PEDIDOS (EXISTENTES) ---
     private static void menuPedidos() {
         int opcion;
         do {
@@ -661,7 +630,7 @@ public class Main {
                 return;
             }
 
-            System.out.print("Forma de pago (EFECTIVO/TARJETA): ");
+            System.out.print("Forma de pago (EFECTIVO/TARJETA/TRANSFERENCIA): ");
             String formaPagoInput = scanner.nextLine();
             FormaPago formaPago = FormaPago.valueOf(formaPagoInput.toUpperCase());
 
@@ -685,13 +654,13 @@ public class Main {
                 return;
             }
 
-            System.out.print("Nuevo Estado (" + existente.getEstado() + "): ");
+            System.out.print("Nuevo Estado (" + existente.getEstado() + ") (PENDIENTE/CONFIRMADO/TERMINADO/CANCELADO): ");
             String estadoInput = scanner.nextLine();
             if (!estadoInput.trim().isEmpty()) {
                 existente.setEstado(Estado.valueOf(estadoInput.toUpperCase()));
             }
 
-            System.out.print("Nueva Forma de Pago (" + existente.getFormaPago() + "): ");
+            System.out.print("Nueva Forma de Pago (" + existente.getFormaPago() + ") (EFECTIVO/TARJETA/TRANSFERENCIA): ");
             String formaPagoInput = scanner.nextLine();
             if (!formaPagoInput.trim().isEmpty()) {
                 existente.setFormaPago(FormaPago.valueOf(formaPagoInput.toUpperCase()));
