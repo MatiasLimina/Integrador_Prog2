@@ -3,6 +3,7 @@ package com.integrador.foodstore.service;
 import com.integrador.foodstore.dao.PedidoDAO;
 import com.integrador.foodstore.dao.impl.PedidoDAOImpl;
 import com.integrador.foodstore.domain.Pedido;
+import com.integrador.foodstore.exception.ServiceException;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -12,65 +13,50 @@ public class PedidoService {
 
     private PedidoDAO pedidoDAO = new PedidoDAOImpl();
 
-    // Crear un nuevo pedido con sus detalles
-    public void crearPedido(Pedido pedido) {
+    public void crearPedido(Pedido pedido) throws ServiceException {
         if (pedido.getUsuario() == null) {
-            System.err.println("❌ Error: No se puede crear un pedido sin un usuario asociado.");
-            return;
+            throw new ServiceException("No se puede crear un pedido sin un usuario asociado.");
+        }
+        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
+            throw new ServiceException("No se puede crear un pedido sin detalles.");
         }
 
         try {
             pedidoDAO.guardar(pedido);
-            System.out.println("✅ Pedido creado correctamente con ID: " + pedido.getId());
         } catch (SQLException e) {
-            System.err.println("❌ Error al crear el pedido: " + e.getMessage());
+            throw new ServiceException("Error al guardar el pedido en la base de datos: " + e.getMessage(), e);
         }
     }
 
-    // Listar pedidos existentes
-    public List<Pedido> listarPedidos() {
+    public List<Pedido> listarPedidos() throws ServiceException {
         try {
             return pedidoDAO.listar();
         } catch (SQLException e) {
-            System.err.println("❌ Error al listar pedidos: " + e.getMessage());
-            return new ArrayList<>();
+            throw new ServiceException("Error al listar los pedidos: " + e.getMessage(), e);
         }
     }
 
-
-    // Buscar un pedido por ID
-    public Pedido buscarPedidoPorId(Long id) {
+    public Pedido buscarPedidoPorId(Long id) throws ServiceException {
         try {
-            Pedido p = pedidoDAO.buscarPorId(id);
-            if (p != null) {
-                System.out.println("Pedido encontrado: " + p);
-            } else {
-                System.out.println("No se encontró el pedido con ID: " + id);
-            }
-            return p;
+            return pedidoDAO.buscarPorId(id);
         } catch (SQLException e) {
-            System.err.println("❌ Error al buscar pedido: " + e.getMessage());
-            return null;
+            throw new ServiceException("Error al buscar el pedido: " + e.getMessage(), e);
         }
     }
 
-    // Actualizar un pedido existente
-    public void actualizarPedido(Pedido pedido) {
+    public void actualizarPedido(Pedido pedido) throws ServiceException {
         try {
             pedidoDAO.actualizar(pedido);
-            System.out.println("✅ Pedido actualizado correctamente.");
         } catch (SQLException e) {
-            System.err.println("❌ Error al actualizar pedido: " + e.getMessage());
+            throw new ServiceException("Error al actualizar el pedido: " + e.getMessage(), e);
         }
     }
 
-    // Eliminar (baja lógica) un pedido
-    public void eliminarPedido(Long id) {
+    public void eliminarPedido(Long id) throws ServiceException {
         try {
             pedidoDAO.eliminar(id);
-            System.out.println("✅ Pedido eliminado correctamente.");
         } catch (SQLException e) {
-            System.err.println("❌ Error al eliminar pedido: " + e.getMessage());
+            throw new ServiceException("Error al eliminar el pedido: " + e.getMessage(), e);
         }
     }
 }

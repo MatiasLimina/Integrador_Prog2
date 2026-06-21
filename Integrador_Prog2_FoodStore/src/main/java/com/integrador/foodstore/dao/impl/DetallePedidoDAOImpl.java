@@ -13,9 +13,9 @@ public class DetallePedidoDAOImpl implements DetallePedidoDAO {
     // --- Guardar detalle ---
     // Nota: recibe la Connection abierta por PedidoDAOImpl para que todo quede en la misma transacción
     @Override
-    public void guardar(DetallePedido d, Long pedidoId) throws SQLException {
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
+    public void guardar(DetallePedido d, Long pedidoId, Connection conn) throws SQLException {
+        // Usamos la conexión que ya nos pasan (que ya tiene setAutoCommit(false))
+        try (PreparedStatement ps = conn.prepareStatement(
                      "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, subtotal, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)"
              )) {
             ps.setLong(1, pedidoId);
@@ -26,6 +26,7 @@ public class DetallePedidoDAOImpl implements DetallePedidoDAO {
             ps.setTimestamp(6, Timestamp.valueOf(d.getCreatedAt()));
             ps.executeUpdate();
         }
+        // No cerramos la conexión aquí, PedidoDAOImpl se encarga de eso.
     }
 
     // --- Listar detalles por pedido ---

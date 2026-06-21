@@ -2,6 +2,7 @@ package com.integrador.foodstore;
 
 import com.integrador.foodstore.config.DatabaseConnection;
 import com.integrador.foodstore.domain.Categoria;
+import com.integrador.foodstore.domain.DetallePedido;
 import com.integrador.foodstore.domain.Pedido;
 import com.integrador.foodstore.domain.Producto;
 import com.integrador.foodstore.domain.Usuario;
@@ -250,7 +251,7 @@ public class Main {
             } else {
                 System.out.println("\nListado de Productos:");
                 for (Producto p : lista) {
-                    System.out.println(p);
+                    System.out.println(p + " | Disponible: " + (p.getDisponible() ? "Sí" : "No"));
                 }
             }
         } catch (ServiceException e) {
@@ -282,8 +283,11 @@ public class Main {
             int stock = Integer.parseInt(scanner.nextLine());
             System.out.print("Imagen (URL o nombre de archivo): ");
             String imagen = scanner.nextLine();
-            System.out.print("¿Está disponible? (true/false): ");
-            Boolean disponible = Boolean.parseBoolean(scanner.nextLine());
+            
+            System.out.print("¿Está disponible? (S/N): ");
+            String dispInput = scanner.nextLine().trim().toLowerCase();
+            Boolean disponible = dispInput.equals("s") || dispInput.equals("si") || dispInput.equals("true") || dispInput.equals("1");
+            
             System.out.print("ID de Categoría: ");
             Long categoriaId = Long.parseLong(scanner.nextLine());
 
@@ -314,7 +318,7 @@ public class Main {
                 return;
             }
 
-            System.out.println("Producto actual: " + existente);
+            System.out.println("Producto actual: " + existente + " | Disponible: " + existente.getDisponible());
             System.out.print("Nuevo Nombre (" + existente.getNombre() + "): ");
             String nombre = scanner.nextLine();
             if (!nombre.trim().isEmpty()) existente.setNombre(nombre);
@@ -335,9 +339,11 @@ public class Main {
             String imagen = scanner.nextLine();
             if (!imagen.trim().isEmpty()) existente.setImagen(imagen);
 
-            System.out.print("¿Nuevo estado disponible? (" + existente.getDisponible() + ") (true/false): ");
-            String disponibleStr = scanner.nextLine();
-            if (!disponibleStr.trim().isEmpty()) existente.setDisponible(Boolean.parseBoolean(disponibleStr));
+            System.out.print("¿Nuevo estado disponible? (" + existente.getDisponible() + ") (S/N o dejar vacío para mantener): ");
+            String disponibleStr = scanner.nextLine().trim().toLowerCase();
+            if (!disponibleStr.isEmpty()) {
+                existente.setDisponible(disponibleStr.equals("s") || disponibleStr.equals("si") || disponibleStr.equals("true") || disponibleStr.equals("1"));
+            }
 
             List<Categoria> categorias = categoriaService.listarCategorias();
             if (!categorias.isEmpty()) {
@@ -409,7 +415,7 @@ public class Main {
             } else {
                 System.out.println("\nListado de Productos para Categoría ID " + categoriaId + ":");
                 for (Producto p : lista) {
-                    System.out.println(p);
+                    System.out.println(p + " | Disponible: " + (p.getDisponible() ? "Sí" : "No"));
                 }
             }
         } catch (NumberFormatException e) {
@@ -627,25 +633,70 @@ public class Main {
     private static void ejecutarCrearPedido() {
         try {
             System.out.println("\n=== Crear Nuevo Pedido ===");
-            System.out.print("ID Usuario: ");
-            Long usuarioId = Long.parseLong(scanner.nextLine());
 
+            // 1. Seleccionar Usuario
+            System.out.print("ID del Usuario para el pedido: ");
+            Long usuarioId = Long.parseLong(scanner.nextLine());
             Usuario usuario = usuarioService.buscarUsuario(usuarioId);
             if (usuario == null) {
-                System.out.println("Usuario no encontrado.");
+                System.out.println("❌ Usuario no encontrado.");
                 return;
             }
 
+            // 2. Seleccionar Forma de Pago
             System.out.print("Forma de pago (EFECTIVO/TARJETA/TRANSFERENCIA): ");
-            String formaPagoInput = scanner.nextLine();
-            FormaPago formaPago = FormaPago.valueOf(formaPagoInput.toUpperCase());
+            FormaPago formaPago = FormaPago.valueOf(scanner.nextLine().toUpperCase());
 
-            Pedido nuevo = new Pedido(usuario, Estado.PENDIENTE, formaPago);
-            pedidoService.crearPedido(nuevo);
+            // 3. Crear el Pedido vacío
+            Pedido nuevoPedido = new Pedido(usuario, Estado.PENDIENTE, formaPago);
 
-            System.out.println("¡Pedido creado con éxito!");
+            // 4. Bucle para agregar detalles
+            String continuar;
+            do {
+                // Mostrar productos disponibles
+                System.out.println("\n--- Productos Disponibles ---");
+                ejecutarListarProductos();
+
+                System.out.print("Ingrese el ID del producto a agregar: ");
+                Long productoId = Long.parseLong(scanner.nextLine());
+                Producto producto = productoService.buscarProductoPorId(productoId);
+
+                if (producto == null) {
+                    System.out.println("❌ Producto no encontrado.");
+                } else if (producto.getDisponible() != null && !producto.getDisponible()) {
+                    System.out.println("❌ El producto '" + producto.getNombre() + "' no está disponible actualmente.");
+                } else {
+                    System.out.print("Ingrese la cantidad: ");
+                    int cantidad = Integer.parseInt(scanner.nextLine());
+
+                    if (cantidad > producto.getStock()) {
+                        System.out.println("❌ Stock insuficiente. Stock disponible: " + producto.getStock());
+                    } else {
+                        // Usar el método sobrecargado
+                        nuevoPedido.addDetallePedido(cantidad, producto.getPrecio() * cantidad, producto);
+                        System.out.println("✅ Producto '" + producto.getNombre() + "' agregado al pedido.");
+                    }
+                }
+
+                System.out.print("\n¿Desea agregar otro producto? (S/N): ");
+                continuar = scanner.nextLine();
+            } while (continuar.equalsIgnoreCase("S"));
+
+            // 5. Guardar el pedido completo
+            if (nuevoPedido.getDetalles().isEmpty()) {
+                System.out.println("❌ El pedido no tiene detalles y no será guardado.");
+                return;
+            }
+            
+            pedidoService.crearPedido(nuevoPedido);
+            System.out.println("✅ ¡Pedido creado con éxito con ID: " + nuevoPedido.getId() + " y un total de: $" + nuevoPedido.getTotal() + "!");
+
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Error de formato: Ingrese un número válido.");
+        } catch (IllegalArgumentException | ServiceException e) {
+            System.out.println("❌ Error al crear el pedido: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Error al crear pedido: " + e.getMessage());
+            System.out.println("❌ Ocurrió un error inesperado: " + e.getMessage());
         }
     }
 

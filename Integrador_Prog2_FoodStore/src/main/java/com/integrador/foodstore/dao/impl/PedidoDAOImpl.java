@@ -20,34 +20,31 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public void guardar(Pedido p) throws SQLException {
         Connection conn = null;
-        PreparedStatement ps = null; // Declarar fuera del try-with-resources para el finally
+        PreparedStatement ps = null;
         try {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false); // Inicia transacción
 
-            // Insertar pedido
             String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)";
             ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS);
 
-            ps.setLong(1, p.getUsuario().getId()); // Usuario asociado
-            ps.setString(2, p.getEstado().name()); // Enum Estado
-            ps.setString(3, p.getFormaPago().name()); // Enum FormaPago
+            ps.setLong(1, p.getUsuario().getId());
+            ps.setString(2, p.getEstado().name());
+            ps.setString(3, p.getFormaPago().name());
             ps.setDouble(4, p.getTotal());
             ps.setBoolean(5, p.isEliminado());
             ps.setTimestamp(6, Timestamp.valueOf(p.getCreatedAt()));
             ps.executeUpdate();
 
-            // Obtener ID generado
-            try (ResultSet rs = ps.getGeneratedKeys()) { // try-with-resources para ResultSet
+            try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     Long pedidoId = rs.getLong(1);
-                    p.setId(pedidoId); // ✅ ahora el pedido tiene ID real
+                    p.setId(pedidoId);
 
-                    // Insertar detalles asociados al pedido
                     if (p.getDetalles() != null) {
                         for (DetallePedido d : p.getDetalles()) {
-                            // Asegurarse de que el detalle tenga el pedidoId correcto
-                            detalleDAO.guardar(d, pedidoId);
+                            // Pasamos la conexión existente al DAO de detalles
+                            detalleDAO.guardar(d, pedidoId, conn);
                         }
                     }
                 }
@@ -56,12 +53,12 @@ public class PedidoDAOImpl implements PedidoDAO {
             conn.commit(); // Confirmar transacción
         } catch (SQLException e) {
             if (conn != null) {
-                conn.rollback(); // Rollback si falla algo
+                conn.rollback();
             }
             throw e;
         } finally {
-            if (ps != null) ps.close(); // Cerrar PreparedStatement
-            if (conn != null) conn.close(); // Cerrar Connection
+            if (ps != null) ps.close();
+            if (conn != null) conn.close();
         }
     }
 
@@ -75,12 +72,11 @@ public class PedidoDAOImpl implements PedidoDAO {
                      "JOIN usuarios u ON p.usuario_id = u.id " +
                      "WHERE p.eliminado = false";
 
-        try (Connection conn = DatabaseConnection.getConnection(); // try-with-resources para Connection
-             PreparedStatement ps = conn.prepareStatement(sql);    // try-with-resources para PreparedStatement
-             ResultSet rs = ps.executeQuery()) {                   // try-with-resources para ResultSet
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                // Crear objeto Usuario desde el JOIN
                 Usuario usuario = new Usuario(
                         rs.getLong("usuario_id"),
                         rs.getString("nombre"),
@@ -88,7 +84,6 @@ public class PedidoDAOImpl implements PedidoDAO {
                         rs.getString("email")
                 );
 
-                // Crear objeto Pedido con el Usuario cargado
                 Pedido p = new Pedido(
                         rs.getLong("id"),
                         rs.getBoolean("eliminado"),
@@ -101,7 +96,7 @@ public class PedidoDAOImpl implements PedidoDAO {
 
                 pedidos.add(p);
             }
-        } // Los recursos (conn, ps, rs) se cierran automáticamente aquí
+        }
         return pedidos;
     }
 
@@ -118,9 +113,8 @@ public class PedidoDAOImpl implements PedidoDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) { // try-with-resources para ResultSet
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    // Crear objeto Usuario desde el JOIN
                     Usuario usuario = new Usuario(
                             rs.getLong("usuario_id"),
                             rs.getString("nombre"),
@@ -128,7 +122,6 @@ public class PedidoDAOImpl implements PedidoDAO {
                             rs.getString("email")
                     );
 
-                    // Crear objeto Pedido con el Usuario cargado
                     pedido = new Pedido(
                             rs.getLong("id"),
                             rs.getBoolean("eliminado"),
