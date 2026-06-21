@@ -499,7 +499,13 @@ public class Main {
             Rol rol = null;
             if (!rolInput.trim().isEmpty()) {
                 int rolOpc = Integer.parseInt(rolInput);
-                rol = (rolOpc == 1) ? Rol.ADMIN : Rol.USUARIO;
+                if (rolOpc == 1) {
+                    rol = Rol.ADMIN;
+                } else if (rolOpc == 2) {
+                    rol = Rol.USUARIO;
+                } else {
+                    System.out.println("❌ Opción de rol inválida. Se dejará como nulo.");
+                }
             }
 
             Usuario nuevo = new Usuario(nombre, apellido, email, celular, password, rol);
