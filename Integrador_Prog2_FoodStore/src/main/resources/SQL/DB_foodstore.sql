@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS productos (
     
     FOREIGN KEY (categoria_id) REFERENCES categorias(id)
 );
-
+-- ALTER TABLE usuarios 
+-- ADD COLUMN celular VARCHAR(30) NULL AFTER email;
 CREATE TABLE IF NOT EXISTS usuarios (
     -- Atributos provenientes de la clase padre 'Base'
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -42,6 +43,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE, -- UNIQUE garantiza la regla de negocio de mail único
+    celular VARCHAR(10) NOT NULL,
     password VARCHAR(255) NOT NULL,
     rol VARCHAR(30) NOT NULL            -- Almacena el .name() del ENUM (ADMIN, USUARIO)
 );
