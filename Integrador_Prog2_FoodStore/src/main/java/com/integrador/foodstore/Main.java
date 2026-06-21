@@ -490,11 +490,17 @@ public class Main {
 
             System.out.print("Seleccione Rol (1. ADMIN / 2. USUARIO): ");
             String rolInput = scanner.nextLine();
-            Rol rol = (Integer.parseInt(rolInput) == 1) ? Rol.ADMIN : Rol.USUARIO;
+            Rol rol = null;
+            if (!rolInput.trim().isEmpty()) {
+                int rolOpc = Integer.parseInt(rolInput);
+                rol = (rolOpc == 1) ? Rol.ADMIN : Rol.USUARIO;
+            }
 
             Usuario nuevo = new Usuario(nombre, apellido, email, celular, password, rol);
             usuarioService.registrarUsuario(nuevo);
             System.out.println("¡Usuario registrado con éxito!");
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Error de formato: Ingrese un número válido para el Rol.");
         } catch (CamposVaciosException | EmailDuplicadoException e) {
             System.out.println("❌ " + e.getMessage());
         } catch (Exception e) {
