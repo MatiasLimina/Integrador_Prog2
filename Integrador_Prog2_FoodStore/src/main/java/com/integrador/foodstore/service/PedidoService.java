@@ -14,6 +14,11 @@ public class PedidoService {
 
     // Crear un nuevo pedido con sus detalles
     public void crearPedido(Pedido pedido) {
+        if (pedido.getUsuario() == null) {
+            System.err.println("❌ Error: No se puede crear un pedido sin un usuario asociado.");
+            return;
+        }
+
         try {
             pedidoDAO.guardar(pedido);
             System.out.println("✅ Pedido creado correctamente con ID: " + pedido.getId());

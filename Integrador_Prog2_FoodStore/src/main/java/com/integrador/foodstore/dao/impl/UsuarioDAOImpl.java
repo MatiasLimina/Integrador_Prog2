@@ -12,16 +12,17 @@ import java.util.List;
 public class UsuarioDAOImpl implements UsuarioDAO {
     @Override
     public void guardar(Usuario u) throws SQLException{
-        String sql = "INSERT INTO usuarios (nombre, apellido, email, password, rol,eliminado,created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO usuarios (nombre, apellido, email, celular, password, rol,eliminado,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = DatabaseConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)){
             ps.setString(1,u.getNombre());
             ps.setString(2,u.getApellido());
             ps.setString(3,u.getEmail());
-            ps.setString(4,u.getPassword());
-            ps.setString(5,u.getRol().name());
-            ps.setBoolean(6,u.isEliminado());
-            ps.setTimestamp(7, Timestamp.valueOf(u.getCreatedAt()));
+            ps.setString(4,u.getCelular());
+            ps.setString(5,u.getPassword());
+            ps.setString(6,u.getRol().name());
+            ps.setBoolean(7,u.isEliminado());
+            ps.setTimestamp(8, Timestamp.valueOf(u.getCreatedAt()));
             ps.executeUpdate();
         };
     }
@@ -56,15 +57,16 @@ public class UsuarioDAOImpl implements UsuarioDAO {
 
     @Override
     public void actualizar(Usuario u) throws SQLException {
-        String sql = "UPDATE usuarios SET nombre = ?, apellido = ?, email = ?, password = ?, rol = ? WHERE id = ? AND eliminado = false";
+        String sql = "UPDATE usuarios SET nombre = ?, apellido = ?, email = ?, celular = ?, password = ?, rol = ? WHERE id = ? AND eliminado = false";
         try (Connection con = DatabaseConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, u.getNombre());
             ps.setString(2, u.getApellido());
             ps.setString(3, u.getEmail());
-            ps.setString(4, u.getPassword());
-            ps.setString(5, u.getRol().name());
-            ps.setLong(6, u.getId());
+            ps.setString(4, u.getCelular());
+            ps.setString(5, u.getPassword());
+            ps.setString(6, u.getRol().name());
+            ps.setLong(7, u.getId());
             ps.executeUpdate();
         }
     }
@@ -88,6 +90,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
                 rs.getString("nombre"),
                 rs.getString("apellido"),
                 rs.getString("email"),
+                rs.getString("celular"),
                 rs.getString("password"),
                 Rol.valueOf(rs.getString("rol"))
         );

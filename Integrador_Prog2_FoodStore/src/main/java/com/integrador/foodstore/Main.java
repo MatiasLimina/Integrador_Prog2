@@ -499,6 +499,8 @@ public class Main {
             String apellido = scanner.nextLine();
             System.out.print("Email: ");
             String email = scanner.nextLine();
+            System.out.print("Celular: ");
+            String celular = scanner.nextLine();
             System.out.print("Contraseña: ");
             String password = scanner.nextLine();
 
@@ -516,7 +518,7 @@ public class Main {
                 }
             }
 
-            Usuario nuevo = new Usuario(nombre, apellido, email, password, rol);
+            Usuario nuevo = new Usuario(nombre, apellido, email, celular, password, rol);
             usuarioService.registrarUsuario(nuevo);
             System.out.println("¡Usuario registrado con éxito!");
         } catch (CamposVaciosException e) {
@@ -551,6 +553,10 @@ public class Main {
             System.out.print("Nuevo Email (" + existente.getEmail() + "): ");
             String email = scanner.nextLine();
             if (!email.trim().isEmpty()) existente.setEmail(email);
+
+            System.out.print("Nuevo Celular (" + existente.getCelular() + "): ");
+            String celular = scanner.nextLine();
+            if (!celular.trim().isEmpty()) existente.setCelular(celular);
 
             System.out.print("Nueva Contraseña: ");
             String password = scanner.nextLine();
