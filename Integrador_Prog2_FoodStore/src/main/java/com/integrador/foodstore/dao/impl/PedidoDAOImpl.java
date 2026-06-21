@@ -20,15 +20,14 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public void guardar(Pedido p) throws SQLException {
         Connection conn = null;
+        PreparedStatement ps = null; // Declarar fuera del try-with-resources para el finally
         try {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false); // Inicia transacción
 
             // Insertar pedido
-            PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                    Statement.RETURN_GENERATED_KEYS
-            );
+            String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+            ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS);
 
             ps.setLong(1, p.getUsuario().getId()); // Usuario asociado
             ps.setString(2, p.getEstado().name()); // Enum Estado
@@ -39,7 +38,7 @@ public class PedidoDAOImpl implements PedidoDAO {
             ps.executeUpdate();
 
             // Obtener ID generado
-            try (ResultSet rs = ps.getGeneratedKeys()) {
+            try (ResultSet rs = ps.getGeneratedKeys()) { // try-with-resources para ResultSet
                 if (rs.next()) {
                     Long pedidoId = rs.getLong(1);
                     p.setId(pedidoId); // ✅ ahora el pedido tiene ID real
@@ -47,6 +46,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                     // Insertar detalles asociados al pedido
                     if (p.getDetalles() != null) {
                         for (DetallePedido d : p.getDetalles()) {
+                            // Asegurarse de que el detalle tenga el pedidoId correcto
                             detalleDAO.guardar(d, pedidoId);
                         }
                     }
@@ -55,118 +55,116 @@ public class PedidoDAOImpl implements PedidoDAO {
 
             conn.commit(); // Confirmar transacción
         } catch (SQLException e) {
-            if (conn != null) conn.rollback(); // Rollback si falla algo
+            if (conn != null) {
+                conn.rollback(); // Rollback si falla algo
+            }
             throw e;
         } finally {
-            if (conn != null) conn.close();
+            if (ps != null) ps.close(); // Cerrar PreparedStatement
+            if (conn != null) conn.close(); // Cerrar Connection
         }
     }
 
 
     @Override
     public List<Pedido> listar() throws SQLException {
-        Connection conn = DatabaseConnection.getConnection();
-        PreparedStatement ps = conn.prepareStatement(
-                "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, " +
-                        "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
-                        "FROM pedidos p " +
-                        "JOIN usuarios u ON p.usuario_id = u.id " +
-                        "WHERE p.eliminado = false"
-        );
-        ResultSet rs = ps.executeQuery();
-
         List<Pedido> pedidos = new ArrayList<>();
-        while (rs.next()) {
-            // Crear objeto Usuario desde el JOIN
-            Usuario usuario = new Usuario(
-                    rs.getLong("usuario_id"),
-                    rs.getString("nombre"),
-                    rs.getString("apellido"),
-                    rs.getString("email")
-            );
+        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, " +
+                     "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
+                     "FROM pedidos p " +
+                     "JOIN usuarios u ON p.usuario_id = u.id " +
+                     "WHERE p.eliminado = false";
 
-            // Crear objeto Pedido con el Usuario cargado
-            Pedido p = new Pedido(
-                    rs.getLong("id"),
-                    rs.getBoolean("eliminado"),
-                    rs.getTimestamp("created_at").toLocalDateTime(),
-                    usuario,
-                    Estado.valueOf(rs.getString("estado")),
-                    FormaPago.valueOf(rs.getString("forma_pago")),
-                    rs.getDouble("total")
-            );
+        try (Connection conn = DatabaseConnection.getConnection(); // try-with-resources para Connection
+             PreparedStatement ps = conn.prepareStatement(sql);    // try-with-resources para PreparedStatement
+             ResultSet rs = ps.executeQuery()) {                   // try-with-resources para ResultSet
 
-            pedidos.add(p);
-        }
+            while (rs.next()) {
+                // Crear objeto Usuario desde el JOIN
+                Usuario usuario = new Usuario(
+                        rs.getLong("usuario_id"),
+                        rs.getString("nombre"),
+                        rs.getString("apellido"),
+                        rs.getString("email")
+                );
 
-        conn.close();
+                // Crear objeto Pedido con el Usuario cargado
+                Pedido p = new Pedido(
+                        rs.getLong("id"),
+                        rs.getBoolean("eliminado"),
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        usuario,
+                        Estado.valueOf(rs.getString("estado")),
+                        FormaPago.valueOf(rs.getString("forma_pago")),
+                        rs.getDouble("total")
+                );
+
+                pedidos.add(p);
+            }
+        } // Los recursos (conn, ps, rs) se cierran automáticamente aquí
         return pedidos;
     }
 
 
-
     @Override
     public Pedido buscarPorId(Long id) throws SQLException {
-        Connection conn = DatabaseConnection.getConnection();
-        PreparedStatement ps = conn.prepareStatement(
-                "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, " +
-                        "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
-                        "FROM pedidos p " +
-                        "JOIN usuarios u ON p.usuario_id = u.id " +
-                        "WHERE p.id = ? AND p.eliminado = false"
-        );
-        ps.setLong(1, id);
-        ResultSet rs = ps.executeQuery();
-
         Pedido pedido = null;
-        if (rs.next()) {
-            // Crear objeto Usuario desde el JOIN
-            Usuario usuario = new Usuario(
-                    rs.getLong("usuario_id"),
-                    rs.getString("nombre"),
-                    rs.getString("apellido"),
-                    rs.getString("email")
-            );
+        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, " +
+                     "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
+                     "FROM pedidos p " +
+                     "JOIN usuarios u ON p.usuario_id = u.id " +
+                     "WHERE p.id = ? AND p.eliminado = false";
 
-            // Crear objeto Pedido con el Usuario cargado
-            pedido = new Pedido(
-                    rs.getLong("id"),
-                    rs.getBoolean("eliminado"),
-                    rs.getTimestamp("created_at").toLocalDateTime(),
-                    usuario,
-                    Estado.valueOf(rs.getString("estado")),
-                    FormaPago.valueOf(rs.getString("forma_pago")),
-                    rs.getDouble("total")
-            );
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) { // try-with-resources para ResultSet
+                if (rs.next()) {
+                    // Crear objeto Usuario desde el JOIN
+                    Usuario usuario = new Usuario(
+                            rs.getLong("usuario_id"),
+                            rs.getString("nombre"),
+                            rs.getString("apellido"),
+                            rs.getString("email")
+                    );
+
+                    // Crear objeto Pedido con el Usuario cargado
+                    pedido = new Pedido(
+                            rs.getLong("id"),
+                            rs.getBoolean("eliminado"),
+                            rs.getTimestamp("created_at").toLocalDateTime(),
+                            usuario,
+                            Estado.valueOf(rs.getString("estado")),
+                            FormaPago.valueOf(rs.getString("forma_pago")),
+                            rs.getDouble("total")
+                    );
+                }
+            }
         }
-
-        conn.close();
         return pedido;
     }
 
 
     @Override
     public void actualizar(Pedido p) throws SQLException {
-        Connection conn = DatabaseConnection.getConnection();
-        PreparedStatement ps = conn.prepareStatement(
-                "UPDATE pedidos SET estado = ?, forma_pago = ?, total = ? WHERE id = ?"
-        );
-        ps.setString(1, p.getEstado().name());
-        ps.setString(2, p.getFormaPago().name());
-        ps.setDouble(3, p.getTotal());
-        ps.setLong(4, p.getId());
-        ps.executeUpdate();
-        conn.close();
+        String sql = "UPDATE pedidos SET estado = ?, forma_pago = ?, total = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p.getEstado().name());
+            ps.setString(2, p.getFormaPago().name());
+            ps.setDouble(3, p.getTotal());
+            ps.setLong(4, p.getId());
+            ps.executeUpdate();
+        }
     }
 
     @Override
     public void eliminar(Long id) throws SQLException {
-        Connection conn = DatabaseConnection.getConnection();
-        PreparedStatement ps = conn.prepareStatement(
-                "UPDATE pedidos SET eliminado = true WHERE id = ?"
-        );
-        ps.setLong(1, id);
-        ps.executeUpdate();
-        conn.close();
+        String sql = "UPDATE pedidos SET eliminado = true WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            ps.executeUpdate();
+        }
     }
 }
