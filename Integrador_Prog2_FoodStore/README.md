@@ -27,67 +27,64 @@ Este proyecto es un sistema de gestión de pedidos para una tienda de comida, de
 
 ## Configuración de la Base de Datos
 
-1.  Abre tu cliente de MySQL y crea una nueva base de datos.
+1.  Abre tu cliente de MySQL y ejecuta el siguiente script para crear la base de datos y las tablas:
     ```sql
-    CREATE DATABASE food_store_db;
-    USE food_store_db;
-    ```
+    CREATE DATABASE IF NOT EXISTS food_store_tpi;
+    USE food_store_tpi;
 
-2.  Ejecuta el siguiente script SQL para crear todas las tablas necesarias:
-    ```sql
-    CREATE TABLE categorias (
+    CREATE TABLE IF NOT EXISTS categorias (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(100) NOT NULL UNIQUE,
-        descripcion TEXT,
-        eliminado BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        eliminado TINYINT(1) DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        nombre VARCHAR(100) NOT NULL,
+        descripcion VARCHAR(255)
     );
 
-    CREATE TABLE productos (
+    CREATE TABLE IF NOT EXISTS productos (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(150) NOT NULL,
-        precio DECIMAL(10, 2) NOT NULL,
-        descripcion TEXT,
+        eliminado TINYINT(1) DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        nombre VARCHAR(100) NOT NULL,
+        precio DOUBLE NOT NULL,
+        descripcion VARCHAR(255),
         stock INT NOT NULL,
         imagen VARCHAR(255),
-        disponible BOOLEAN DEFAULT TRUE,
+        disponible TINYINT(1) DEFAULT 1,
         categoria_id BIGINT,
-        eliminado BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (categoria_id) REFERENCES categorias(id)
     );
 
-    CREATE TABLE usuarios (
+    CREATE TABLE IF NOT EXISTS usuarios (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        eliminado TINYINT(1) NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         nombre VARCHAR(100) NOT NULL,
         apellido VARCHAR(100) NOT NULL,
         email VARCHAR(150) NOT NULL UNIQUE,
-        celular VARCHAR(50),
+        celular VARCHAR(10) NOT NULL,
         password VARCHAR(255) NOT NULL,
-        rol VARCHAR(50) NOT NULL,
-        eliminado BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        rol VARCHAR(30) NOT NULL
     );
 
-    CREATE TABLE pedidos (
+    CREATE TABLE IF NOT EXISTS pedidos (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        eliminado TINYINT(1) NOT NULL DEFAULT 0,
+        total DOUBLE NOT NULL DEFAULT 0.0,
+        estado VARCHAR(30) NOT NULL,
+        forma_pago VARCHAR(30) NOT NULL,
         usuario_id BIGINT NOT NULL,
         fecha DATE NOT NULL,
-        estado VARCHAR(50) NOT NULL,
-        forma_pago VARCHAR(50) NOT NULL,
-        total DECIMAL(10, 2) NOT NULL,
-        eliminado BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     );
 
-    CREATE TABLE detalles_pedido (
+    CREATE TABLE IF NOT EXISTS detalles_pedido (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        eliminado TINYINT(1) NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        cantidad INT NOT NULL,
+        subtotal DOUBLE NOT NULL,
         pedido_id BIGINT NOT NULL,
         producto_id BIGINT NOT NULL,
-        cantidad INT NOT NULL,
-        subtotal DECIMAL(10, 2) NOT NULL,
-        eliminado BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
         FOREIGN KEY (producto_id) REFERENCES productos(id)
     );
@@ -99,7 +96,7 @@ La configuración de la conexión a la base de datos se encuentra en la clase `s
 
 Asegúrate de que los siguientes valores coincidan con tu configuración de MySQL:
 
-- `DB_URL`: La URL de tu base de datos (ej. `jdbc:mysql://localhost:3306/food_store_db`).
+- `DB_URL`: La URL de tu base de datos (ej. `jdbc:mysql://localhost:3306/food_store_tpi`).
 - `DB_USER`: Tu nombre de usuario de MySQL.
 - `DB_PASSWORD`: Tu contraseña de MySQL.
 
