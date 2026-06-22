@@ -52,13 +52,14 @@ CREATE TABLE IF NOT EXISTS pedidos (
     -- Atributos de la clase padre 'Base'
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     eliminado TINYINT(1) NOT NULL DEFAULT 0,
-    fecha DATE NOT NULL,
+    
     
     -- Atributos propios de Pedido
     total DOUBLE NOT NULL DEFAULT 0.0,
     estado VARCHAR(30) NOT NULL,     -- Almacena el .name() del ENUM Estado (PENDIENTE, PREPARACION, etc.)
     forma_pago VARCHAR(30) NOT NULL, -- Almacena el .name() del ENUM FormaPago (EFECTIVO, TARJETA, etc.)
     usuario_id BIGINT NOT NULL,      -- Relación N:1 con Usuarios (Quién hizo la compra)
+    fecha DATE NOT NULL,
     
     -- Clave foránea que vincula al cliente
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
