@@ -3,6 +3,7 @@ package com.integrador.foodstore.service;
 import com.integrador.foodstore.dao.PedidoDAO;
 import com.integrador.foodstore.dao.impl.PedidoDAOImpl;
 import com.integrador.foodstore.domain.Pedido;
+import com.integrador.foodstore.domain.DetallePedido;
 import com.integrador.foodstore.exception.ServiceException;
 
 import java.sql.SQLException;
@@ -12,6 +13,7 @@ import java.util.List;
 public class PedidoService {
 
     private PedidoDAO pedidoDAO = new PedidoDAOImpl();
+    private ProductoService productoService = new ProductoService();
 
     public void crearPedido(Pedido pedido) throws ServiceException {
         if (pedido.getUsuario() == null) {
@@ -22,9 +24,16 @@ public class PedidoService {
         }
 
         try {
+            // Guardar el pedido y sus detalles
             pedidoDAO.guardar(pedido);
+
+            // Actualizar el stock de cada producto en el pedido
+            for (DetallePedido detalle : pedido.getDetalles()) {
+                // Restar la cantidad del stock del producto
+                productoService.actualizarStockProducto(detalle.getProducto().getId(), -detalle.getCantidad());
+            }
         } catch (SQLException e) {
-            throw new ServiceException("Error al guardar el pedido en la base de datos: " + e.getMessage(), e);
+            throw new ServiceException("Error al guardar el pedido o actualizar stock en la base de datos: " + e.getMessage(), e);
         }
     }
 

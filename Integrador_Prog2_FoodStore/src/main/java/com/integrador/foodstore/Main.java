@@ -700,39 +700,77 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("❌ Error de formato: Ingrese un número válido.");
         } catch (IllegalArgumentException | ServiceException e) {
-            System.out.println("❌ Error al crear el pedido: " + e.getMessage());
+            System.out.println("❌ Error al crear el pedido. Verifique coincidencias. " + e.getMessage());
         } catch (Exception e) {
             System.out.println("❌ Ocurrió un error inesperado: " + e.getMessage());
         }
     }
 
     private static void ejecutarEditarPedido() {
+        Long id = null;
         try {
             System.out.print("\nIngrese el ID del pedido a modificar: ");
-            Long id = Long.parseLong(scanner.nextLine());
+            id = Long.parseLong(scanner.nextLine());
 
             Pedido existente = pedidoService.buscarPedidoPorId(id);
             if (existente == null) {
-                System.out.println("El pedido no existe o está dado de baja.");
+                System.out.println("❌ El pedido con ID " + id + " no existe o está dado de baja.");
                 return;
             }
 
-            System.out.print("Nuevo Estado (" + existente.getEstado() + ") (PENDIENTE/CONFIRMADO/TERMINADO/CANCELADO): ");
+            // Editar Estado
+            System.out.println("\nEstado actual: " + existente.getEstado());
+            System.out.println("Seleccione nuevo Estado:");
+            int i = 1;
+            for (Estado estado : Estado.values()) {
+                System.out.println(i++ + ". " + estado);
+            }
+            System.out.print("Opción (dejar vacío para mantener " + existente.getEstado() + "): ");
             String estadoInput = scanner.nextLine();
             if (!estadoInput.trim().isEmpty()) {
-                existente.setEstado(Estado.valueOf(estadoInput.toUpperCase()));
+                try {
+                    int opcionEstado = Integer.parseInt(estadoInput);
+                    if (opcionEstado > 0 && opcionEstado <= Estado.values().length) {
+                        existente.setEstado(Estado.values()[opcionEstado - 1]);
+                    } else {
+                        System.out.println("❌ Opción de estado inválida. Se mantiene el estado actual.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("❌ Entrada inválida para estado. Se mantiene el estado actual.");
+                }
             }
 
-            System.out.print("Nueva Forma de Pago (" + existente.getFormaPago() + ") (EFECTIVO/TARJETA/TRANSFERENCIA): ");
+            // --- Editar Forma de Pago ---
+            System.out.println("\nForma de Pago actual: " + existente.getFormaPago());
+            System.out.println("Seleccione nueva Forma de Pago:");
+            i = 1;
+            for (FormaPago formaPago : FormaPago.values()) {
+                System.out.println(i++ + ". " + formaPago);
+            }
+            System.out.print("Opción (dejar vacío para mantener " + existente.getFormaPago() + "): ");
             String formaPagoInput = scanner.nextLine();
             if (!formaPagoInput.trim().isEmpty()) {
-                existente.setFormaPago(FormaPago.valueOf(formaPagoInput.toUpperCase()));
+                try {
+                    int opcionFormaPago = Integer.parseInt(formaPagoInput);
+                    if (opcionFormaPago > 0 && opcionFormaPago <= FormaPago.values().length) {
+                        existente.setFormaPago(FormaPago.values()[opcionFormaPago - 1]);
+                    } else {
+                        System.out.println("❌ Opción de forma de pago inválida. Se mantiene la forma de pago actual.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("❌ Entrada inválida para forma de pago. Se mantiene la forma de pago actual.");
+                }
             }
 
             pedidoService.actualizarPedido(existente);
-            System.out.println("¡Pedido actualizado correctamente!");
+            System.out.println("✅ ¡Pedido actualizado correctamente!");
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Error: Ingrese un ID numérico válido para el pedido.");
+        } catch (ServiceException e) {
+            System.out.println("❌ Error al editar pedido: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Error al editar: " + e.getMessage());
+            System.out.println("❌ Ocurrió un error inesperado al editar el pedido: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
