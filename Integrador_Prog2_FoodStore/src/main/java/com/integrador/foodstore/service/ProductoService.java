@@ -106,6 +106,34 @@ public class ProductoService {
         }
     }
 
+    /**
+     * Actualiza el stock de un producto específico.
+     *
+     * @param productoId El ID del producto cuyo stock se va a actualizar.
+     * @param cantidadCambio La cantidad a sumar o restar del stock actual. Positivo para añadir, negativo para restar.
+     * @throws ServiceException Si el producto no existe, el stock resultante es negativo o hay un error de DB.
+     */
+    public void actualizarStockProducto(Long productoId, int cantidadCambio) throws ServiceException {
+        if (productoId == null) {
+            throw new ServiceException("El ID del producto no puede ser nulo para actualizar el stock.");
+        }
+        try {
+            Producto producto = productoDAO.buscarPorId(productoId);
+            if (producto == null) {
+                throw new ServiceException("Producto con ID " + productoId + " no encontrado para actualizar stock.");
+            }
+
+            int nuevoStock = producto.getStock() + cantidadCambio;
+            if (nuevoStock < 0) {
+                throw new ServiceException("Stock insuficiente para el producto '" + producto.getNombre() + "'. Stock actual: " + producto.getStock() + ", se intenta restar: " + (-cantidadCambio));
+            }
+            producto.setStock(nuevoStock);
+            productoDAO.actualizar(producto); // Reutilizamos el método actualizar que ya tenemos
+        } catch (SQLException e) {
+            throw new ServiceException("Error al actualizar el stock del producto en la base de datos: " + e.getMessage(), e);
+        }
+    }
+
     public void eliminarProducto(Long id) throws ServiceException {
         if (id == null) {
             throw new ServiceException("El ID del producto no puede ser nulo para eliminar.");
