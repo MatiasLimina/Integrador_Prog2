@@ -75,6 +75,7 @@ Este proyecto es un sistema de gestión de pedidos para una tienda de comida, de
         estado VARCHAR(50) NOT NULL,
         forma_pago VARCHAR(50) NOT NULL,
         total DECIMAL(10, 2) NOT NULL,
+        fecha DATE NOT NULL,
         eliminado BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)

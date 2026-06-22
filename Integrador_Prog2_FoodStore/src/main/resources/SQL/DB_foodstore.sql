@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
     -- Atributos de la clase padre 'Base'
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     eliminado TINYINT(1) NOT NULL DEFAULT 0,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha DATE NOT NULL,
     
     -- Atributos propios de Pedido
     total DOUBLE NOT NULL DEFAULT 0.0,
@@ -79,3 +79,9 @@ CREATE TABLE IF NOT EXISTS detalles_pedido (
     FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
+
+-- ALTER TABLE pedidos 
+-- DROP COLUMN created_at;
+
+-- ALTER TABLE pedidos 
+-- ADD COLUMN  fecha DATE NOT NULL DEFAULT (CURRENT_DATE);

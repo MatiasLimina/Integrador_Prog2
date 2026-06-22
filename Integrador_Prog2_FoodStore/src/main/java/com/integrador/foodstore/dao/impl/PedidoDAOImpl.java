@@ -24,14 +24,15 @@ public class PedidoDAOImpl implements PedidoDAO {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false); // Inicia transacción
 
-            String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, fecha, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setLong(1, p.getUsuario().getId());
                 ps.setString(2, p.getEstado().name());
                 ps.setString(3, p.getFormaPago().name());
                 ps.setDouble(4, p.getTotal());
-                ps.setBoolean(5, p.isEliminado());
-                ps.setTimestamp(6, Timestamp.valueOf(p.getCreatedAt()));
+                ps.setDate(5, Date.valueOf(p.getFecha()));
+                ps.setBoolean(6, p.isEliminado());
+                ps.setTimestamp(7, Timestamp.valueOf(p.getCreatedAt()));
                 ps.executeUpdate();
 
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -65,7 +66,7 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public List<Pedido> listar() throws SQLException {
         List<Pedido> pedidos = new ArrayList<>();
-        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, " +
+        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, p.fecha, " +
                      "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
                      "FROM pedidos p " +
                      "JOIN usuarios u ON p.usuario_id = u.id " +
@@ -90,7 +91,8 @@ public class PedidoDAOImpl implements PedidoDAO {
                         usuario,
                         Estado.valueOf(rs.getString("estado")),
                         FormaPago.valueOf(rs.getString("forma_pago")),
-                        rs.getDouble("total")
+                        rs.getDouble("total"),
+                        rs.getDate("fecha").toLocalDate()
                 );
 
                 pedidos.add(p);
@@ -103,7 +105,7 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public Pedido buscarPorId(Long id) throws SQLException {
         Pedido pedido = null;
-        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, " +
+        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, p.fecha, " +
                      "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
                      "FROM pedidos p " +
                      "JOIN usuarios u ON p.usuario_id = u.id " +
@@ -128,7 +130,8 @@ public class PedidoDAOImpl implements PedidoDAO {
                             usuario,
                             Estado.valueOf(rs.getString("estado")),
                             FormaPago.valueOf(rs.getString("forma_pago")),
-                            rs.getDouble("total")
+                            rs.getDouble("total"),
+                            rs.getDate("fecha").toLocalDate()
                     );
                 }
             }
@@ -139,13 +142,12 @@ public class PedidoDAOImpl implements PedidoDAO {
 
     @Override
     public void actualizar(Pedido p) throws SQLException {
-        String sql = "UPDATE pedidos SET estado = ?, forma_pago = ?, total = ? WHERE id = ?";
+        String sql = "UPDATE pedidos SET estado = ?, forma_pago = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getEstado().name());
             ps.setString(2, p.getFormaPago().name());
-            ps.setDouble(3, p.getTotal());
-            ps.setLong(4, p.getId());
+            ps.setLong(3, p.getId());
             ps.executeUpdate();
         }
     }

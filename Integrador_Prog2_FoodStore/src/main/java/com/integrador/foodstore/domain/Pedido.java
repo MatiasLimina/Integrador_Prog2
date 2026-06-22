@@ -4,6 +4,7 @@ import com.integrador.foodstore.enums.Estado;
 import com.integrador.foodstore.enums.FormaPago;
 import com.integrador.foodstore.interfaces.Calculable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,6 +15,7 @@ public class Pedido extends Base implements Calculable {
     private Estado estado;
     private FormaPago formaPago;
     private Double total;
+    private LocalDate fecha;
     private List<DetallePedido> detalles;
 
     // Constructor vacío
@@ -21,6 +23,7 @@ public class Pedido extends Base implements Calculable {
         super();
         this.detalles = new ArrayList<>();
         this.total = 0.0;
+        this.fecha = LocalDate.now(); // Asignar fecha actual por defecto
     }
 
     // Constructor para nuevos pedidos
@@ -33,12 +36,13 @@ public class Pedido extends Base implements Calculable {
 
     // Constructor completo para DAO
     public Pedido(Long id, boolean eliminado, LocalDateTime createdAt,
-                  Usuario usuario, Estado estado, FormaPago formaPago, Double total) {
+                  Usuario usuario, Estado estado, FormaPago formaPago, Double total, LocalDate fecha) {
         super(id, eliminado, createdAt);
         this.usuario = usuario;
         this.estado = estado;
         this.formaPago = formaPago;
         this.total = total;
+        this.fecha = fecha;
         this.detalles = new ArrayList<>();
     }
 
@@ -102,6 +106,9 @@ public class Pedido extends Base implements Calculable {
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
 
+    public LocalDate getFecha() { return fecha; }
+    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+
     public List<DetallePedido> getDetalles() { return detalles; }
     public void setDetalles(List<DetallePedido> detalles) { this.detalles = detalles; }
 
@@ -116,6 +123,7 @@ public class Pedido extends Base implements Calculable {
     @Override
     public String toString() {
         return "Pedido [ID: " + getId() +
+                " | Fecha: " + fecha +
                 " | Cliente: " + usuario.getApellido() +
                 " | Estado: " + estado +
                 " | Forma de Pago: " + formaPago +
