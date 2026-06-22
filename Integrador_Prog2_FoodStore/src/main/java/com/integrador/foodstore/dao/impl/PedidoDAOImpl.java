@@ -20,31 +20,29 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public void guardar(Pedido p) throws SQLException {
         Connection conn = null;
-        PreparedStatement ps = null;
         try {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false); // Inicia transacción
 
             String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?)";
-            ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS);
+            try (PreparedStatement ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setLong(1, p.getUsuario().getId());
+                ps.setString(2, p.getEstado().name());
+                ps.setString(3, p.getFormaPago().name());
+                ps.setDouble(4, p.getTotal());
+                ps.setBoolean(5, p.isEliminado());
+                ps.setTimestamp(6, Timestamp.valueOf(p.getCreatedAt()));
+                ps.executeUpdate();
 
-            ps.setLong(1, p.getUsuario().getId());
-            ps.setString(2, p.getEstado().name());
-            ps.setString(3, p.getFormaPago().name());
-            ps.setDouble(4, p.getTotal());
-            ps.setBoolean(5, p.isEliminado());
-            ps.setTimestamp(6, Timestamp.valueOf(p.getCreatedAt()));
-            ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        Long pedidoId = rs.getLong(1);
+                        p.setId(pedidoId);
 
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    Long pedidoId = rs.getLong(1);
-                    p.setId(pedidoId);
-
-                    if (p.getDetalles() != null) {
-                        for (DetallePedido d : p.getDetalles()) {
-                            // Pasamos la conexión existente al DAO de detalles
-                            detalleDAO.guardar(d, pedidoId, conn);
+                        if (p.getDetalles() != null) {
+                            for (DetallePedido d : p.getDetalles()) {
+                                detalleDAO.guardar(d, pedidoId, conn);
+                            }
                         }
                     }
                 }
@@ -57,8 +55,9 @@ public class PedidoDAOImpl implements PedidoDAO {
             }
             throw e;
         } finally {
-            if (ps != null) ps.close();
-            if (conn != null) conn.close();
+            if (conn != null) {
+                conn.close();
+            }
         }
     }
 

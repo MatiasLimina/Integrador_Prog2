@@ -24,7 +24,7 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             ps.setBoolean(7,u.isEliminado());
             ps.setTimestamp(8, Timestamp.valueOf(u.getCreatedAt()));
             ps.executeUpdate();
-        };
+        }
     }
 
     @Override
@@ -81,7 +81,6 @@ public class UsuarioDAOImpl implements UsuarioDAO {
         }
     }
 
-    // Método utilitario para evitar duplicar código de mapeo
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
         return new Usuario(
                 rs.getLong("id"),

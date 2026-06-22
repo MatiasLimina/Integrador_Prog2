@@ -7,7 +7,6 @@ import com.integrador.foodstore.domain.Producto;
 
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,38 +14,30 @@ public class ProductoDAOImpl implements ProductoDAO {
 
     @Override
     public void guardar(Producto p) throws SQLException {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DatabaseConnection.getConnection();
-            String sql = "INSERT INTO productos (nombre, precio, descripcion, stock, imagen, disponible, categoria_id, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        String sql = "INSERT INTO productos (nombre, precio, descripcion, stock, imagen, disponible, categoria_id, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
             ps.setString(1, p.getNombre());
             ps.setDouble(2, p.getPrecio());
             ps.setString(3, p.getDescripcion());
             ps.setInt(4, p.getStock());
             ps.setString(5, p.getImagen());
             ps.setBoolean(6, p.getDisponible());
-            ps.setLong(7, p.getCategoria().getId()); // Asumiendo que el objeto Categoria ya tiene un ID
+            ps.setLong(7, p.getCategoria().getId());
             ps.setBoolean(8, p.isEliminado());
             ps.setTimestamp(9, Timestamp.valueOf(p.getCreatedAt()));
             ps.executeUpdate();
 
-            rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                p.setId(rs.getLong(1));
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    p.setId(rs.getLong(1));
+                }
             }
-        } finally {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (conn != null) conn.close();
         }
     }
 
-    // Método auxiliar para mapear un ResultSet a un objeto Producto
     private Producto mapResultSetToProducto(ResultSet rs) throws SQLException {
-        // Crear objeto Categoria a partir de los datos unidos
         Categoria categoria = new Categoria(
                 rs.getLong("categoria_id"),
                 rs.getBoolean("cat_eliminado"),
