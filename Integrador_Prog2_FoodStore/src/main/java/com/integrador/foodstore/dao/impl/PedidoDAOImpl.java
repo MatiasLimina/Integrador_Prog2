@@ -22,17 +22,16 @@ public class PedidoDAOImpl implements PedidoDAO {
         Connection conn = null;
         try {
             conn = DatabaseConnection.getConnection();
-            conn.setAutoCommit(false); // Inicia transacción
+            conn.setAutoCommit(false);
 
-            String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, estado, forma_pago, total, fecha, eliminado, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsertPedido = "INSERT INTO pedidos (usuario_id, fecha, estado, forma_pago, total, eliminado) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sqlInsertPedido, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setLong(1, p.getUsuario().getId());
-                ps.setString(2, p.getEstado().name());
-                ps.setString(3, p.getFormaPago().name());
-                ps.setDouble(4, p.getTotal());
-                ps.setDate(5, Date.valueOf(p.getFecha()));
+                ps.setDate(2, Date.valueOf(p.getFecha()));
+                ps.setString(3, p.getEstado().name());
+                ps.setString(4, p.getFormaPago().name());
+                ps.setDouble(5, p.getTotal());
                 ps.setBoolean(6, p.isEliminado());
-                ps.setTimestamp(7, Timestamp.valueOf(p.getCreatedAt()));
                 ps.executeUpdate();
 
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -49,7 +48,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                 }
             }
 
-            conn.commit(); // Confirmar transacción
+            conn.commit();
         } catch (SQLException e) {
             if (conn != null) {
                 conn.rollback();
@@ -66,7 +65,7 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public List<Pedido> listar() throws SQLException {
         List<Pedido> pedidos = new ArrayList<>();
-        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, p.fecha, " +
+        String sql = "SELECT p.id, p.eliminado, p.fecha, p.estado, p.forma_pago, p.total, " +
                      "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
                      "FROM pedidos p " +
                      "JOIN usuarios u ON p.usuario_id = u.id " +
@@ -87,14 +86,13 @@ public class PedidoDAOImpl implements PedidoDAO {
                 Pedido p = new Pedido(
                         rs.getLong("id"),
                         rs.getBoolean("eliminado"),
-                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        null, // createdAt no se usa desde la DB
                         usuario,
                         Estado.valueOf(rs.getString("estado")),
                         FormaPago.valueOf(rs.getString("forma_pago")),
                         rs.getDouble("total"),
                         rs.getDate("fecha").toLocalDate()
                 );
-
                 pedidos.add(p);
             }
         }
@@ -105,7 +103,7 @@ public class PedidoDAOImpl implements PedidoDAO {
     @Override
     public Pedido buscarPorId(Long id) throws SQLException {
         Pedido pedido = null;
-        String sql = "SELECT p.id, p.eliminado, p.created_at, p.estado, p.forma_pago, p.total, p.fecha, " +
+        String sql = "SELECT p.id, p.eliminado, p.fecha, p.estado, p.forma_pago, p.total, " +
                      "u.id AS usuario_id, u.nombre, u.apellido, u.email " +
                      "FROM pedidos p " +
                      "JOIN usuarios u ON p.usuario_id = u.id " +
@@ -126,7 +124,7 @@ public class PedidoDAOImpl implements PedidoDAO {
                     pedido = new Pedido(
                             rs.getLong("id"),
                             rs.getBoolean("eliminado"),
-                            rs.getTimestamp("created_at").toLocalDateTime(),
+                            null, // createdAt no se usa desde la DB
                             usuario,
                             Estado.valueOf(rs.getString("estado")),
                             FormaPago.valueOf(rs.getString("forma_pago")),
